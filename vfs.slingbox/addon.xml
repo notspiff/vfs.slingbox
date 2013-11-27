@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon
+  id="vfs.slingbox"
+  version="1.0.0"
+  name="Slingbox support"
+  provider-name="spiff">
+  <requires>
+    <import addon="xbmc.vfs" version="1.0.0"/>
+  </requires>
+  <extension
+    point="xbmc.vfs"
+    protocols="sling"
+    files="true"
+    directories="true"
+    library_linux="vfs.slingbox.so"/>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en">Slingbox support</summary>
+    <description lang="en">Slingbox support</description>
+    <platform>all</platform>
+  </extension>
+</addon>

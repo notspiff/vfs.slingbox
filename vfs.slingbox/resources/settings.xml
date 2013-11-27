@@ -1,0 +1,8 @@
+<settings>
+  <setting id="resolution"     label="30000" type="enum" values="128x96|160x120|176x120|224x176|256x192|320x240|352x240|320x480|640x240|640x480" default="5"/>
+  <setting id="videobitrate"   label="30001" type="number" default="704"/>
+  <setting id="framerate"      label="30002" type="enum" values="1|5|6|10|12|15|20|24|25|30" default="9"/>
+  <setting id="smothing"       label="30003" type="number" default="50"/>
+  <setting id="audiobitrate"   label="30004" type="enum" values="16|32|48|64|80|96" default="3"/>
+  <setting id="iframeinterval" label="30005" type="number" default="10"/>
+</settings>
