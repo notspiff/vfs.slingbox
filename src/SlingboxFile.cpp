@@ -514,7 +514,7 @@ bool DirectoryExists(VFSURL* url)
 void* GetDirectory(VFSURL* url, VFSDirEntry** items, int* num_items)
 {
   *items = new VFSDirEntry;
-  items->path = strdup(url->url);
+  items[0]->path = strdup(url->url);
   items[0]->label = XBMC->GetLocalizedString(30006);
   items[0]->title = NULL;
   items[0]->properties = new VFSProperty;
