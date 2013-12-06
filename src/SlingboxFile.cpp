@@ -302,45 +302,42 @@ static void LoadSettings(SlingContext* ctx, const std::string& hostname)
   */
 }
 
-void* Open(const char* url, const char* hostname,
-           const char* filename, unsigned int port,
-           const char* options, const char* username,
-           const char* password)
+void* Open(VFSURL* url)
 {
   // Setup the IP/hostname and port (setup default port if none specified)
-  if (port == 0)
-    port = 5001;
+  if (url->port == 0)
+    url->port = 5001;
 
   SlingContext* result = new SlingContext;
   result->CopySettings(g_slingbox_ctx);
 
-  result->sling.SetAddress(hostname, port);
+  result->sling.SetAddress(url->hostname, url->port);
 
   // Prepare to connect to the Slingbox
   bool bAdmin;
-  if (strcasecmp(username, "administrator") == 0)
+  if (strcasecmp(url->username, "administrator") == 0)
     bAdmin = true;
-  else if (strcasecmp(username, "viewer") == 0)
+  else if (strcasecmp(url->username, "viewer") == 0)
     bAdmin = false;
   else
   {
     XBMC->Log(ADDON::LOG_ERROR, "%s - Invalid or no username specified for Slingbox: %s",
-              __FUNCTION__, hostname);
+              __FUNCTION__, url->hostname);
 
     delete result;
     return NULL;
   }
 
   // Connect to the Slingbox
-  if (result->sling.Connect(bAdmin, password))
+  if (result->sling.Connect(bAdmin, url->password))
   {
     XBMC->Log(ADDON::LOG_DEBUG, "%s - Successfully connected to Slingbox: %s",
-              __FUNCTION__, hostname);
+              __FUNCTION__, url->hostname);
   }
   else
   {
     XBMC->Log(ADDON::LOG_ERROR, "%s - Error connecting to Slingbox: %s",
-              __FUNCTION__, hostname);
+              __FUNCTION__, url->hostname);
     delete result;
     return NULL;
   }
@@ -349,17 +346,17 @@ void* Open(const char* url, const char* hostname,
   if (result->sling.InitializeStream())
   {
     XBMC->Log(ADDON::LOG_DEBUG, "%s - Successfully initialized stream on Slingbox: %s",
-              __FUNCTION__, hostname);
+              __FUNCTION__, url->hostname);
   }
   else
   {
     XBMC->Log(ADDON::LOG_ERROR, "%s - Error initializing stream on Slingbox: %s",
-              __FUNCTION__, hostname);
+              __FUNCTION__, url->hostname);
     delete result;
     return NULL;
   }
 
-  std::string filewithoutpath(filename);
+  std::string filewithoutpath(url->filename);
   size_t pos = filewithoutpath.rfind("/");
   filewithoutpath.erase(filewithoutpath.begin(), filewithoutpath.begin()+pos);
 
@@ -368,14 +365,14 @@ void* Open(const char* url, const char* hostname,
   {
     if (result->sling.SetInput(atoi(filewithoutpath.c_str())))
       XBMC->Log(ADDON::LOG_DEBUG, "%s - Successfully requested change to input %i on Slingbox: %s",
-                __FUNCTION__, atoi(filewithoutpath.c_str()), hostname);
+                __FUNCTION__, atoi(filewithoutpath.c_str()), url->hostname);
     else
       XBMC->Log(ADDON::LOG_ERROR, "%s - Error requesting change to input %i on Slingbox: %s",
-                __FUNCTION__, atoi(filewithoutpath.c_str()), hostname);
+                __FUNCTION__, atoi(filewithoutpath.c_str()), url->hostname);
   }
 
   // Load the video settings
-  LoadSettings(result, hostname);
+  LoadSettings(result, url->hostname);
 
   // Setup video options  
   if (result->sling.StreamSettings(result->resolution, result->video_bitrate,
@@ -387,24 +384,24 @@ void* Open(const char* url, const char* hostname,
                                 "audio bitrate %i kbit/s; I frame interval: %i) on Slingbox: %s",
                                 __FUNCTION__, result->resolution, result->video_bitrate, 
                                 result->video_framerate, result->video_smoothing, 
-                                result->audio_bitrate, result->video_iframeinterval, hostname);
+                                result->audio_bitrate, result->video_iframeinterval, url->hostname);
   }
   else
   {
     XBMC->Log(ADDON::LOG_ERROR, "%s - Error setting stream options on Slingbox: %s",
-              __FUNCTION__, hostname);
+              __FUNCTION__, url->hostname);
   }
 
   // Start the stream
   if (result->sling.StartStream())
   {
     XBMC->Log(ADDON::LOG_DEBUG, "%s - Successfully started stream on Slingbox: %s",
-              __FUNCTION__, hostname);
+              __FUNCTION__, url->hostname);
   }
   else
   {
     XBMC->Log(ADDON::LOG_ERROR, "%s - Error starting stream on Slingbox: %s",
-              __FUNCTION__, hostname);
+              __FUNCTION__, url->hostname);
     delete result;
     return NULL;
   }
@@ -414,16 +411,16 @@ void* Open(const char* url, const char* hostname,
   {
     if (result->sling.GetInput() == -1)
       XBMC->Log(ADDON::LOG_DEBUG, "%s - Unable to confirm change to input %i on Slingbox: %s",
-                __FUNCTION__, atoi(filewithoutpath.c_str()), hostname);
+                __FUNCTION__, atoi(filewithoutpath.c_str()), url->hostname);
     else if (result->sling.GetInput() == atoi(filewithoutpath.c_str()))
       XBMC->Log(ADDON::LOG_DEBUG, "%s - Comfirmed change to input %i on Slingbox: %s",
-                __FUNCTION__, atoi(filewithoutpath.c_str()), hostname);
+                __FUNCTION__, atoi(filewithoutpath.c_str()), url->hostname);
     else
       XBMC->Log(ADDON::LOG_ERROR, "%s - Error changing to input %i on Slingbox: %s",
-                __FUNCTION__, atoi(filewithoutpath.c_str()), hostname);
+                __FUNCTION__, atoi(filewithoutpath.c_str()), url->hostname);
   }
 
-  result->hostname = hostname;
+  result->hostname = url->hostname;
   return result;
 }
 
@@ -483,20 +480,14 @@ int64_t Seek(void* context, int64_t iFilePosition, int iWhence)
   return -1;
 }
 
-bool Exists(const char* url, const char* hostname,
-            const char* filename, unsigned int port,
-            const char* options, const char* username,
-            const char* password)
+bool Exists(VFSURL* url)
 {
   return false;
 }
 
-int Stat(const char* url, const char* hostname,
-         const char* filename2, unsigned int port,
-         const char* options, const char* username,
-         const char* password, struct __stat64* buffer)
+int Stat(VFSURL* url)
 {
-  -1;
+  return -1;
 }
 
 int IoControl(void* context, XFILE::EIoControl request, void* param)
@@ -515,23 +506,17 @@ void DisconnectAll()
 {
 }
 
-bool DirectoryExists(const char* url, const char* hostname,
-                     const char* filename, unsigned int port,
-                     const char* options, const char* username,
-                     const char* password)
+bool DirectoryExists(VFSURL* url)
 {
   return false;
 }
 
-void* GetDirectory(const char* url, const char* hostname,
-                   const char* filename, unsigned int port,
-                   const char* options, const char* username,
-                   const char* password, VFSDirEntry** items,
-                   int* num_items)
+void* GetDirectory(VFSURL* url, VFSDirEntry** items, int* num_items)
 {
   *items = new VFSDirEntry;
-  items[0]->path = strdup(url);
+  items->path = strdup(url->url);
   items[0]->label = XBMC->GetLocalizedString(30006);
+  items[0]->title = NULL;
   items[0]->properties = new VFSProperty;
   items[0]->properties->name = strdup("propmisusepreformatted");
   items[0]->properties->val = strdup("true");
@@ -553,18 +538,12 @@ void FreeDirectory(void* items)
   delete entry;
 }
 
-bool CreateDirectory(const char* url, const char* hostname,
-                     const char* filename, unsigned int port,
-                     const char* options, const char* username,
-                     const char* password)
+bool CreateDirectory(VFSURL* url)
 {
   return false;
 }
 
-bool RemoveDirectory(const char* url, const char* hostname,
-                     const char* filename, unsigned int port,
-                     const char* options, const char* username,
-                     const char* password)
+bool RemoveDirectory(VFSURL* url)
 {
   return false;
 }
@@ -579,39 +558,22 @@ int Write(void* context, const void* lpBuf, int64_t uiBufSize)
   return -1;
 }
 
-bool Delete(const char* url, const char* hostname,
-            const char* filename2, unsigned int port,
-            const char* options, const char* username,
-            const char* password)
+bool Delete(VFSURL* url)
 {
   return false;
 }
 
-bool Rename(const char* url, const char* hostname,
-            const char* filename, unsigned int port,
-            const char* options, const char* username,
-            const char* password,
-            const char* url2, const char* hostname2,
-            const char* filename2, unsigned int port2,
-            const char* options2, const char* username2,
-            const char* password2)
+bool Rename(VFSURL* url, VFSURL* url2)
 {
   return false;
 }
 
-void* OpenForWrite(const char* url, const char* hostname,
-                   const char* filename2, unsigned int port,
-                   const char* options, const char* username,
-                   const char* password, bool bOverWrite)
+void* OpenForWrite(VFSURL* url, bool bOverWrite)
 { 
   return NULL;
 }
 
-void* ContainsFiles(const char* url, const char* hostname,
-                    const char* filename2, unsigned int port,
-                    const char* options, const char* username,
-                    const char* password,
-                    VFSDirEntry** items, int* num_items)
+void* ContainsFiles(VFSURL* url, VFSDirEntry** items, int* num_items)
 {
   return NULL;
 }
@@ -913,6 +875,11 @@ bool SelectChannel(void* context, unsigned int uiChannel)
 bool UpdateItem(void* context)
 {
   return false;
+}
+
+int GetChunkSize(void* context)
+{
+  return 0;
 }
 
 }
