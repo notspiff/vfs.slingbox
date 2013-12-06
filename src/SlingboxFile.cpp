@@ -485,7 +485,7 @@ bool Exists(VFSURL* url)
   return false;
 }
 
-int Stat(VFSURL* url)
+int Stat(VFSURL* url, struct __stat64* buffer)
 {
   return -1;
 }
