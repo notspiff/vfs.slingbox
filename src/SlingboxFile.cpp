@@ -511,7 +511,8 @@ bool DirectoryExists(VFSURL* url)
   return false;
 }
 
-void* GetDirectory(VFSURL* url, VFSDirEntry** items, int* num_items)
+void* GetDirectory(VFSURL* url, VFSDirEntry** items,
+                   int* num_items, VFSCallbacks* callbacks)
 {
   *items = new VFSDirEntry;
   items[0]->path = strdup(url->url);
