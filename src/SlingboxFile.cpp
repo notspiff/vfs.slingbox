@@ -424,18 +424,15 @@ void* Open(VFSURL* url)
   return result;
 }
 
-unsigned int Read(void* context, void* lpBuf, int64_t uiBufSize)
+ssize_t Read(void* context, void* lpBuf, size_t uiBufSize)
 {
   SlingContext* ctx = (SlingContext*)context;
 
   // Read the data and check for any errors
-  int iRead = ctx->sling.ReadStream(lpBuf, (unsigned int)uiBufSize);
+  ssize_t iRead = ctx->sling.ReadStream(lpBuf, (unsigned int)uiBufSize);
   if (iRead < 0)
-  {
     XBMC->Log(ADDON::LOG_ERROR, "%s - Error reading stream from Slingbox: %s", __FUNCTION__,
               ctx->hostname.c_str());
-    return 0;
-  }
 
   return iRead;
 }
@@ -554,7 +551,7 @@ int Truncate(void* context, int64_t size)
   return -1;
 }
 
-int Write(void* context, const void* lpBuf, int64_t uiBufSize)
+ssize_t Write(void* context, const void* lpBuf, size_t uiBufSize)
 {
   return -1;
 }
